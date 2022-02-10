@@ -15,19 +15,6 @@ void set_keys()
     keys.key_up[1] = 119;
 }
 
-/*
-int get_key()
-{
-    int key_pressed = 0;
-
-    printf("Entre com uma tecla: ");
-    key_pressed = getch();
-
-    fflush(stdin);
-    return key_pressed;
-}
-*/
-
 SDL_Event get_key(){
     SDL_Event event;
     SDL_PollEvent(&event);
@@ -35,38 +22,90 @@ SDL_Event get_key(){
 }
 
 void move(SDL_Event key_pressed){
-    move_x = 0;
-    move_y = 0;
 
     switch(key_pressed.type){
         case SDL_KEYDOWN:
             if(key_pressed.key.keysym.sym == keys.key_right[0] || key_pressed.key.keysym.sym == keys.key_right[1]){
-            move_x += 1;
+                move_x = 1;
+                move_y = 0;
+                imagem_snake = SDL_LoadBMP("snakeImage_right.bmp");
             }
-            else if(key_pressed.key.keysym.sym == keys.key_left[0] || key_pressed.key.keysym.sym == keys.key_left[1]){
-                move_x -= 1;
+            if(key_pressed.key.keysym.sym == keys.key_left[0] || key_pressed.key.keysym.sym == keys.key_left[1]){
+                move_x = -1;
+                move_y = 0;
+                imagem_snake = SDL_LoadBMP("snakeImage_left.bmp");
             }
-            else if(key_pressed.key.keysym.sym == keys.key_up[0] || key_pressed.key.keysym.sym == keys.key_up[1]){
-                move_y += 1;
+            if(key_pressed.key.keysym.sym == keys.key_up[0] || key_pressed.key.keysym.sym == keys.key_up[1]){
+                move_y = -1;
+                move_x = 0;
+
             }
-            else if(key_pressed.key.keysym.sym == keys.key_down[0] || key_pressed.key.keysym.sym == keys.key_down[1]){
-                move_y -= 1;
+            if(key_pressed.key.keysym.sym == keys.key_down[0] || key_pressed.key.keysym.sym == keys.key_down[1]){
+                move_y = 1;
+                move_x = 0;
             }
 
-            else if(key_pressed.key.keysym.sym == 27){
+            if(key_pressed.key.keysym.sym == 27){
+                show_score();
                 printf("SAINDO...");
                 exit(0);
                 destroy_window(window);
-            }
-            else{
-                printf("TECLA PRESSIONADA ERRADA\n");
             }
             break;
         }
 
 
-    if(move_x != 0 || move_y !=0){
-        printf("Posicao x: %d e Posicao y: %d\n",move_x,move_y);
+        snake.sprite_position_dest.x += move_x * acelerate;
+        snake.sprite_position_dest.y += move_y * acelerate;
+        SDL_Delay(update);
+}
+
+int loss_verify(){
+    if(move_x != 0 || move_y != 0){
+        if(snake.sprite_position_dest.x >= WIDTH-snake.scale){
+            snake.sprite_position_dest.x = WIDTH-snake.scale;
+            //snake.imagem_snake = SDL_LoadBMP("snakeImage_stand_right.bmp");
+            return 1;
+        }
+        if(snake.sprite_position_dest.x <= 0){
+            snake.sprite_position_dest.x = 0;
+            //snake.imagem_snake = SDL_LoadBMP("snakeImage_stand_left.bmp");
+            return 1;
+        }
+        if(snake.sprite_position_dest.y >= HEIGHT-snake.scale){
+            snake.sprite_position_dest.y = HEIGHT-snake.scale;
+            return 1;
+        }
+        if(snake.sprite_position_dest.y <= 0){
+            snake.sprite_position_dest.y = 0;
+            return 1;
+        }
+    }
+
+    else{
+        return -1;
+    }
+}
+
+void score(){
+    if(colision(snake,point)==1){
+        game_score += 1;
+    }
+}
+
+void show_score(){
+    printf("SCORE: %d\n\n",game_score);
+}
+
+int colision(SNAKE obj1,Points obj2){
+    if(obj1.sprite_position_dest.x < obj2.point_rect_dest.x + obj2.point_rect_dest.w &&
+       obj1.sprite_position_dest.x + obj1.sprite_position_dest.w > obj2.point_rect_dest.x &&
+       obj1.sprite_position_dest.y < obj2.point_rect_dest.y + obj2.point_rect_dest.h &&
+       obj1.sprite_position_dest.y + obj1.sprite_position_dest.h > obj2.point_rect_dest.y){
+        return 1;
+    }
+    else{
+        return 0;
     }
 }
 
@@ -84,4 +123,11 @@ void free_keys(){
     free(keys.key_left);
     free(keys.key_right);
     free(keys.key_up);
+}
+
+void rand_points(){
+    point.point_rect_dest.x = rand()%(WIDTH-point.point_size);
+    point.point_rect_dest.y = rand()%(HEIGHT-point.point_size);
+
+    //printf("Bolinha!!\nPosiçao x: %d \nPosiçao y: %d \n\n", point.point_rect_dest.x, point.point_rect_dest.y);
 }
